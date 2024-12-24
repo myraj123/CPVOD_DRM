@@ -1,0 +1,5 @@
+flask
+lxml
+requests
+beautifulsoup4
+pywidevine
