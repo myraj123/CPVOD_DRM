@@ -6,32 +6,48 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import glob
+import urllib.parse
 
 app = Flask(__name__)
 
 def wvd_check():
-    extracted_device = glob.glob(f'{os.getcwd()}/WVDs/*.wvd')[0]
-    return extracted_device
+    extracted_device = glob.glob(f'{os.getcwd()}/WVDs/*.wvd')
+    if not extracted_device:
+        raise FileNotFoundError("No WVD files found.")
+    return extracted_device[0]
 
 # Function to generate DRM keys
-def generate_drm_keys(video_url,cptoken):
+def generate_drm_keys(video_url, cptoken):
     wvd = wvd_check()
 
     headers = {
         'x-access-token': cptoken
     }
 
-    response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={video_url}', headers=headers).json()
+    # URL encode the video_url
+    encoded_video_url = urllib.parse.quote(video_url)
+    response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={encoded_video_url}', headers=headers)
+    
+    if response.status_code != 200:
+        return {"error": f"Failed to fetch DRM URLs: {response.text}"}
 
-    if response['status'] != 'ok':
+    response_json = response.json()
+    if response_json.get('status') != 'ok':
         return {"error": "Failed to fetch DRM URLs"}
 
-    mpd = response['drmUrls']['manifestUrl']
-    lic = response['drmUrls']['licenseUrl']
+    mpd = response_json['drmUrls'].get('manifestUrl')
+    lic = response_json['drmUrls'].get('licenseUrl')
+
+    if not mpd or not lic:
+        return {"error": "Missing DRM URLs in response"}
+
     mpd_response = requests.get(mpd)
     soup = BeautifulSoup(mpd_response.text, 'xml')
 
     uuid = soup.find('ContentProtection', attrs={'schemeIdUri': 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'})
+    if uuid is None:
+        return {"error": "ContentProtection not found in MPD"}
+
     pssh = uuid.find('cenc:pssh').text
 
     ipssh = PSSH(pssh)
@@ -62,7 +78,7 @@ def api():
         return jsonify({"error": "URL parameter is required"}), 400
 
     try:
-        result = generate_drm_keys(video_url,cptoken)
+        result = generate_drm_keys(video_url, cptoken)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
