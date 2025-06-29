@@ -14,7 +14,7 @@ def wvd_check():
     return extracted_device
 
 # Function to generate DRM keys
-def generate_drm_keys(video_url):
+def generate_drm_keys(video_url,cptoken):
     wvd = wvd_check()
 
     headers = {
@@ -62,7 +62,7 @@ def api():
         return jsonify({"error": "URL parameter is required"}), 400
 
     try:
-        result = generate_drm_keys(video_url)
+        result = generate_drm_keys(video_url,cptoken)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
