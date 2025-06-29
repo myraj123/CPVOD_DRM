@@ -18,7 +18,7 @@ def generate_drm_keys(video_url):
     wvd = wvd_check()
 
     headers = {
-        'x-access-token': 'eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpZCI6MTI0MjA3NTkyLCJvcmdJZCI6NzExNTI4LCJvcmdDb2RlIjoidWphbGFmIiwib3JnTmFtZSI6IlNhcnJ0aGlJQVMiLCJuYW1lIjoiZ2hyaXRhY2hpIHRpd2FyaSIsImVtYWlsIjpudWxsLCJtb2JpbGUiOiI5MTc5ODc1Mzc1NDUiLCJ0eXBlIjoxLCJpc0RpeSI6dHJ1ZSwiaXNJbnRlcm5hdGlvbmFsIjowLCJkZWZhdWx0TGFuZ3VhZ2UiOiJFTiIsImNvdW50cnlDb2RlIjoiSU4iLCJ0aW1lem9uZSI6IkdNVCs1OjMwIiwiY291bnRyeUlTTyI6IjkxIiwiaXNEaXlTdWJhZG1pbiI6MCwiZmluZ2VycHJpbnRJZCI6ImU1NjExOGYyZDE3NThlYjZiNDAwNmUzZjMxZWVlNzVhIiwiaWF0IjoxNzMzNjU3MTgyLCJleHAiOjE3MzQyNjE5ODJ9._SSGS0dYJDwLjGmOQvEiPeTv8SJypWV0oJ_NgPPWGIcv_T9YmmdNH9-fZJLFMwhZ'
+        'x-access-token': cptoken
     }
 
     response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={video_url}', headers=headers).json()
@@ -57,6 +57,7 @@ def generate_drm_keys(video_url):
 @app.route('/api', methods=['GET'])
 def api():
     video_url = request.args.get('url')
+    cptoken = request.args.get('token')
     if not video_url:
         return jsonify({"error": "URL parameter is required"}), 400
 
